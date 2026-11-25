@@ -8,3 +8,8 @@
 .DS_Store
 .env.local
 npm-debug.log
+/dist
+/.vite
+/test-results
+/.vitest
+/supabase/.temp

@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState, type FormEvent } from "react";
+import { lazy, StrictMode, Suspense, useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BrowserRouter,
@@ -9,13 +9,19 @@ import {
   Route,
   Routes,
   useLocation,
+  useOutletContext,
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
 import { configured, supabase } from "./client";
 import { isAdmin, safeNext, validateSignup } from "./policy";
+import type { Account } from "./wallet/Views";
 import "./style.css";
+
+const Overview = lazy(async () => ({ default: (await import("./wallet/Views")).Overview }));
+const History = lazy(async () => ({ default: (await import("./wallet/Views")).History }));
+const TransferPage = lazy(async () => ({ default: (await import("./wallet/TransferPage")).TransferPage }));
 
 
 function Home() {
@@ -206,7 +212,6 @@ function Guard() {
 
 
 
-type Account = { id: string; name: string; role: "user" | "admin" };
 
 function Shell() {
   const { session } = useAuth();
@@ -307,7 +312,9 @@ function Shell() {
         ) : !current ? (
           <p role="status">Pobieranie profilu i roli…</p>
         ) : (
-          <Outlet context={current} />
+          <Suspense fallback={<p role="status">Wczytywanie widoku…</p>}>
+            <Outlet key={id} context={current} />
+          </Suspense>
         )}
       </section>
     </div>
@@ -315,31 +322,6 @@ function Shell() {
 }
 
 
-
-
-import { useOutletContext } from "react-router-dom";
-
-
-function Overview() {
-  const a = useOutletContext<Account>();
-  return (
-    <>
-      <span className="eyebrow">Twoje konto</span>
-      <h1>Cześć, {a.name}.</h1>
-      <div className="grid">
-        <section className="panel accent">
-          <span>STATUS KONTA</span>
-          <h2>Zalogowany.</h2>
-          <p>Rola: {a.role === "admin" ? "administrator" : "użytkownik"}</p>
-          <Link to="/app/profile">Zobacz profil →</Link>
-        </section>
-        <section className="panel">
-          <span>TWÓJ PORTFEL</span>
-        </section>
-      </div>
-    </>
-  );
-}
 
 
 function Profile() {
@@ -352,6 +334,8 @@ function Profile() {
         <dl>
           <dt>Nazwa</dt>
           <dd>{a.name}</dd>
+          <dt>Identyfikator odbiorcy</dt>
+          <dd>{a.id}</dd>
           <dt>E-mail</dt>
           <dd>{session?.user.email}</dd>
           <dt>Rola z bazy</dt>
@@ -422,8 +406,8 @@ function App() {
         <Route path="/app" element={<Shell />}>
           <Route index element={<Overview />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="transfers" element={<Later title="Przelewy" />} />
-          <Route path="history" element={<Later title="Historia" />} />
+          <Route path="transfers" element={<TransferPage />} />
+          <Route path="history" element={<History />} />
           <Route
             path="requests"
             element={<Later title="Prośby o płatność"/>}

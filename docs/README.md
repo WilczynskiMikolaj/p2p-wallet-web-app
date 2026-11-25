@@ -16,7 +16,7 @@ P2P Wallet Web to aplikacja internetowa umożliwiająca szybkie przesyłanie wir
 - Node.js 22.12 lub nowszy z linii 22, albo Node.js 24.
 - npm, instalowany razem z Node.js.
 - Przeglądarka internetowa, np. Firefox, Chrome lub Edge.
-- Dostęp do istniejącego projektu Supabase: URL projektu i publiczny klucz anon/publishable.
+- Do korzystania z kont i portfeli potrzebne są URL istniejącego projektu Supabase i jego publiczny klucz anon lub publishable. Do uruchomienia samych testów wystarczą Node.js, npm i zwykłe konto systemowe.
 
 ## Instalacja
 
@@ -85,3 +85,23 @@ Content-Length: 46
 
 {"status":"ok","application":"P2P Wallet Web"}
 ```
+
+## Testy
+
+Projekt korzysta z **Vitest**. Test interfejsu używa React Testing Library i jsdom, a testy bazy korzystają z PostgreSQL 17.
+
+By uruchommić testy należy wykonać komendę:
+
+```bash
+npm test
+```
+
+| Katalog | Liczba | Co sprawdza |
+|---|---:|---|
+| `tests/unit/` | 8 | Kwoty w groszach, granica precyzji, format PLN, odbiorca i tytuł. |
+| `tests/integration/` | 5 | Księgowanie i kierunki historii, wycofanie operacji po błędzie księgi, równoczesne ponowienie, dwa zlecenia konkurujące o saldo oraz potwierdzenie w React po utracie odpowiedzi. |
+| `tests/security/` | 2 | Izolacja sald i historii przez RLS oraz odmowa wywołania przelewu przez gościa i bezpośrednich zmian przez użytkownika. |
+| `tests/endpoint/` | 1 | Rzeczywiste lokalne żądanie HTTP do `GET /health` obsługiwane przez konfigurację Vite projektu. Sprawdza status, nagłówki i treść JSON. |
+| `tests/stage1/` | 4 | Zachowane testy przekierowań, roli i rejestracji. |
+
+Testy korzystają z adresu pętli zwrotnej, losowych portów i tymczasowego katalogu systemowego. Po zakończeniu klaster jest zatrzymywany, a pliki bazy usuwane.

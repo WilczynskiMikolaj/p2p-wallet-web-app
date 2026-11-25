@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { safeNext, validateSignup, isAdmin } from "./policy";
-
+import { safeNext, validateSignup, isAdmin } from "../../src/policy";
 
 describe("routing and authorization", () => {
   it("rejects external and protocol-relative redirects", () => {
@@ -12,10 +11,10 @@ describe("routing and authorization", () => {
     ])
       expect(safeNext(path)).toBe("/app");
   });
-  
+
   it("keeps an internal destination", () =>
     expect(safeNext("/app/profile")).toBe("/app/profile"));
-  
+
   it("fails closed on missing or forged roles", () => {
     for (const role of [null, undefined, "user", "ADMIN", {}, true])
       expect(isAdmin(role)).toBe(false);
